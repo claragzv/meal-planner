@@ -1,0 +1,22 @@
+services:
+    postgres:
+        image: postgres:17
+
+        environment:
+            POSTGRES_DB: meal_planner
+            POSTGRES_USER: meal_planner_user
+            POSTGRES_PASSWORD: mp1234.
+
+        ports:
+            # mi pc:contenedor postgres
+            - "5432:5432"
+
+        volumes:
+            # esto dice: todo lo que postgres escriba en su carpeta de datos, guárdalo en un volumen llamado meal_planner_data.
+            # volumen:carpeta dentro del contenedor
+            - meal_planner_data:/var/lib/postgresql/data
+
+        restart: unless-stopped
+
+volumes:
+    meal_planner_data:
