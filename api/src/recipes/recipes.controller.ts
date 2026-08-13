@@ -40,7 +40,7 @@ export class RecipesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
+  delete(@Param('id') id: string) {
     return this.recipesService.delete(+id);
   }
 }
