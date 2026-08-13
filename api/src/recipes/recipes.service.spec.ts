@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { jest } from '@jest/globals';
 import { RecipesService } from './recipes.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Recipe } from 'generated/prisma/client.js';
+import { RecipeNotFoundException } from '../common/exceptions/recipe-not-found.exception.js';
 
 describe('RecipesService', () => {
   let service: RecipesService;
@@ -87,10 +87,10 @@ describe('RecipesService', () => {
       });
     });
 
-    it('should throw NotFoundException when recipe does not exist', async () => {
+    it('should throw RecipeNotFoundException when recipe does not exist', async () => {
       prismaMock.recipe.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne(nonExistingId)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(nonExistingId)).rejects.toThrow(RecipeNotFoundException);
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
         where: { id: nonExistingId },
@@ -155,7 +155,7 @@ describe('RecipesService', () => {
       });
     });
 
-    it('should throw NotFoundException when recipe does not exist', async () => {
+    it('should throw RecipeNotFoundException when recipe does not exist', async () => {
       prismaMock.recipe.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -164,7 +164,7 @@ describe('RecipesService', () => {
           description: 'Descripción',
           prepTime: 20,
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(RecipeNotFoundException);
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
         where: { id: nonExistingId },

@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
+import { RecipeNotFoundException } from '../common/exceptions/recipe-not-found.exception.js';
 import { CreateRecipeDto } from './dto/create-recipe.dto.js';
 import { UpdateRecipeDto } from './dto/update-recipe.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -24,7 +25,7 @@ export class RecipesService {
     });
 
     if (!recipe) {
-      throw new NotFoundException(`Recipe with id ${id} not found`);
+      throw new RecipeNotFoundException(id);
     }
 
     return recipe;
@@ -38,7 +39,7 @@ export class RecipesService {
     });
 
     if (!recipe) {
-      throw new NotFoundException(`Recipe with id ${id} not found`);
+      throw new RecipeNotFoundException(id);
     }
 
     return this.prisma.recipe.update({
@@ -55,7 +56,7 @@ export class RecipesService {
     });
 
     if (!recipe) {
-      throw new NotFoundException(`Recipe with id ${id} not found`);
+      throw new RecipeNotFoundException(id);
     }
 
     await this.prisma.recipe.delete({
