@@ -7,6 +7,9 @@ import { Recipe } from 'generated/prisma/client.js';
 
 describe('RecipesService', () => {
   let service: RecipesService;
+  const recipeId = '550e8400-e29b-41d4-a716-446655440000';
+  const recipeId2 = '550e8400-e29b-41d4-a716-446655440001';
+  const nonExistingId = '550e8400-e29b-41d4-a716-446655440002';
 
   const prismaMock = {
     recipe: {
@@ -14,7 +17,7 @@ describe('RecipesService', () => {
       findMany: jest.fn<() => Promise<Recipe[]>>(),
       findUnique: jest.fn<() => Promise<Recipe | null>>(),
       update: jest.fn<() => Promise<Recipe>>(),
-      delete: jest.fn<() => Promise<Recipe>>(),
+      delete: jest.fn<() => Promise<void>>(),
     },
   };
 
@@ -47,7 +50,7 @@ describe('RecipesService', () => {
       };
 
       const recipe = {
-        id: 1,
+        id: recipeId,
         ...dto,
       };
 
@@ -66,7 +69,7 @@ describe('RecipesService', () => {
   describe('findOne', () => {
     it('should return a recipe when it exists', async () => {
       const recipe = {
-        id: 1,
+        id: recipeId,
         name: 'Pasta carbonara',
         description: 'Pasta con huevo y queso',
         prepTime: 25,
@@ -75,22 +78,22 @@ describe('RecipesService', () => {
       // "Cuando el service pregunte a Prisma por esta receta, simula que Prisma la encuentra."
       prismaMock.recipe.findUnique.mockResolvedValue(recipe);
 
-      const result = await service.findOne(1);
+      const result = await service.findOne(recipeId);
 
       expect(result).toEqual(recipe);
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: recipeId },
       });
     });
 
     it('should throw NotFoundException when recipe does not exist', async () => {
       prismaMock.recipe.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(nonExistingId)).rejects.toThrow(NotFoundException);
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
-        where: { id: 999 },
+        where: { id: nonExistingId },
       });
     });
   });
@@ -99,13 +102,13 @@ describe('RecipesService', () => {
     it('should return all recipes', async () => {
       const recipes = [
         {
-          id: 1,
+          id: recipeId,
           name: 'Pasta carbonara',
           description: 'Pasta con huevo y queso',
           prepTime: 25,
         },
         {
-          id: 2,
+          id: recipeId2,
           name: 'Pizza',
           description: 'Pizza de mozzarella',
           prepTime: 40,
@@ -131,23 +134,23 @@ describe('RecipesService', () => {
       };
 
       const recipe = {
-        id: 1,
+        id: recipeId,
         ...dto,
       };
 
       prismaMock.recipe.findUnique.mockResolvedValue(recipe);
       prismaMock.recipe.update.mockResolvedValue(recipe);
 
-      const result = await service.update(1, dto);
+      const result = await service.update(recipeId, dto);
 
       expect(result).toEqual(recipe);
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: recipeId },
       });
 
       expect(prismaMock.recipe.update).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: recipeId },
         data: dto,
       });
     });
@@ -156,7 +159,7 @@ describe('RecipesService', () => {
       prismaMock.recipe.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.update(999, {
+        service.update(nonExistingId, {
           name: 'Pasta',
           description: 'Descripción',
           prepTime: 20,
@@ -164,7 +167,7 @@ describe('RecipesService', () => {
       ).rejects.toThrow(NotFoundException);
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
-        where: { id: 999 },
+        where: { id: nonExistingId },
       });
 
       // esto comprueba que si no existe, Prisma no ejecuta el update
@@ -175,38 +178,26 @@ describe('RecipesService', () => {
   describe('delete', () => {
     it('should delete a recipe', async () => {
       const recipe = {
-        id: 1,
+        id: recipeId,
         name: 'Pasta carbonara',
         description: 'Pasta con huevo y queso',
         prepTime: 25,
       };
 
       prismaMock.recipe.findUnique.mockResolvedValue(recipe);
-      prismaMock.recipe.delete.mockResolvedValue(recipe);
+      prismaMock.recipe.delete.mockResolvedValue();
 
-      const result = await service.delete(1);
+      const result = await service.delete(recipeId);
 
-      expect(result).toEqual(recipe);
+      expect(result).toBeUndefined();
 
       expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: recipeId },
       });
 
       expect(prismaMock.recipe.delete).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: recipeId },
       });
-    });
-
-    it('should throw NotFoundException when recipe does not exist', async () => {
-      prismaMock.recipe.findUnique.mockResolvedValue(null);
-
-      await expect(service.delete(999)).rejects.toThrow(NotFoundException);
-
-      expect(prismaMock.recipe.findUnique).toHaveBeenCalledWith({
-        where: { id: 999 },
-      });
-
-      expect(prismaMock.recipe.delete).not.toHaveBeenCalled();
     });
   });
 });

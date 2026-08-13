@@ -18,11 +18,9 @@ export class RecipesService {
     return this.prisma.recipe.findMany();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const recipe = await this.prisma.recipe.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!recipe) {
@@ -32,7 +30,7 @@ export class RecipesService {
     return recipe;
   }
 
-  async update(id: number, updateRecipeDto: UpdateRecipeDto) {
+  async update(id: string, updateRecipeDto: UpdateRecipeDto) {
     const recipe = await this.prisma.recipe.findUnique({
       where: {
         id,
@@ -51,7 +49,7 @@ export class RecipesService {
     });
   }
 
-  async delete(id: number) {
+  async delete(id: string) {
     const recipe = await this.prisma.recipe.findUnique({
       where: { id },
     });

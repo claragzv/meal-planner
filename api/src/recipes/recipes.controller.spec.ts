@@ -6,6 +6,7 @@ import { Recipe } from './entities/recipe.entity.js';
 
 describe('RecipesController', () => {
   let controller: RecipesController;
+  const recipeId = '550e8400-e29b-41d4-a716-446655440000';
 
   const recipesServiceMock = {
     create: jest.fn<() => Promise<Recipe>>(),
@@ -39,7 +40,7 @@ describe('RecipesController', () => {
     it('should return all recipes', async () => {
       const recipes = [
         {
-          id: 1,
+          id: recipeId,
           name: 'Pasta carbonara',
           description: 'Pasta con huevo y queso',
           prepTime: 25,
@@ -59,7 +60,7 @@ describe('RecipesController', () => {
   describe('findOne', () => {
     it('should return a recipe by ID', async () => {
       const recipe = {
-        id: 1,
+        id: recipeId,
         name: 'Pasta carbonara',
         description: 'Pasta con huevo y queso',
         prepTime: 25,
@@ -67,11 +68,11 @@ describe('RecipesController', () => {
 
       recipesServiceMock.findOne.mockResolvedValue(recipe);
 
-      const result = await controller.findOne(1);
+      const result = await controller.findOne(recipeId);
 
       expect(result).toEqual(recipe);
 
-      expect(recipesServiceMock.findOne).toHaveBeenCalledWith(1);
+      expect(recipesServiceMock.findOne).toHaveBeenCalledWith(recipeId);
     });
   });
 
@@ -84,7 +85,7 @@ describe('RecipesController', () => {
       };
 
       const recipe = {
-        id: 1,
+        id: recipeId,
         ...dto,
       };
 
@@ -106,7 +107,7 @@ describe('RecipesController', () => {
       };
 
       const updatedRecipe = {
-        id: 1,
+        id: recipeId,
         name: 'Pasta carbonara actualizada',
         description: 'Pasta con huevo y queso',
         prepTime: 30,
@@ -114,12 +115,12 @@ describe('RecipesController', () => {
 
       recipesServiceMock.update.mockResolvedValue(updatedRecipe);
 
-      const result = await controller.update(1, updateDto);
+      const result = await controller.update(recipeId, updateDto);
 
       expect(result).toEqual(updatedRecipe);
 
       expect(recipesServiceMock.update).toHaveBeenCalledWith(
-        1,
+        recipeId,
         updateDto,
       );
     });
@@ -129,11 +130,11 @@ describe('RecipesController', () => {
     it('should delete a recipe', async () => {
       recipesServiceMock.delete.mockResolvedValue(undefined);
 
-      const result = await controller.delete(1);
+      const result = await controller.delete(recipeId);
 
       expect(result).toBeUndefined();
 
-      expect(recipesServiceMock.delete).toHaveBeenCalledWith(1);
+      expect(recipesServiceMock.delete).toHaveBeenCalledWith(recipeId);
     });
   });
 });

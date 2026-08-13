@@ -8,7 +8,7 @@ import {
   Param,
   Patch,
   Post,
-  ParseIntPipe
+  ParseUUIDPipe
 } from '@nestjs/common';
 import { RecipesService } from './recipes.service.js';
 import { CreateRecipeDto } from './dto/create-recipe.dto.js';
@@ -30,18 +30,21 @@ export class RecipesController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.recipesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateRecipeDto: UpdateRecipeDto) {
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() updateRecipeDto: UpdateRecipeDto,
+  ) {
     return this.recipesService.update(id, updateRecipeDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id', ParseIntPipe) id: number) {
+  delete(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.recipesService.delete(id);
   }
 }
