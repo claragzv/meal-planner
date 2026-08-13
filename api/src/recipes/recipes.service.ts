@@ -51,7 +51,7 @@ export class RecipesService {
     });
   }
 
-  async remove(id: number) {
+  async delete(id: number) {
     const recipe = await this.prisma.recipe.findUnique({
       where: {
         id,
