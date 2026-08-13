@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsPositive, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export class CreateRecipeDto {
     @IsString()
@@ -10,6 +10,6 @@ export class CreateRecipeDto {
     description: string;
 
     @IsInt()
-    @IsPositive()
+    @Min(1)
     prepTime: number;
 }

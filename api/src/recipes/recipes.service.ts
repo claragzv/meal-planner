@@ -53,19 +53,15 @@ export class RecipesService {
 
   async delete(id: number) {
     const recipe = await this.prisma.recipe.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!recipe) {
       throw new NotFoundException(`Recipe with id ${id} not found`);
     }
 
-    return this.prisma.recipe.delete({
-      where: {
-        id,
-      },
+    await this.prisma.recipe.delete({
+      where: { id },
     });
   }
 }

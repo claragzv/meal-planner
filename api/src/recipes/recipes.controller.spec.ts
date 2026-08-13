@@ -12,7 +12,7 @@ describe('RecipesController', () => {
     findAll: jest.fn<() => Promise<Recipe[]>>(),
     findOne: jest.fn<() => Promise<Recipe>>(),
     update: jest.fn<() => Promise<Recipe>>(),
-    delete: jest.fn<() => Promise<Recipe>>(),
+    delete: jest.fn<() => Promise<void>>(),
   };
 
   beforeEach(async () => {
@@ -67,7 +67,7 @@ describe('RecipesController', () => {
 
       recipesServiceMock.findOne.mockResolvedValue(recipe);
 
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(1);
 
       expect(result).toEqual(recipe);
 
@@ -114,7 +114,7 @@ describe('RecipesController', () => {
 
       recipesServiceMock.update.mockResolvedValue(updatedRecipe);
 
-      const result = await controller.update('1', updateDto);
+      const result = await controller.update(1, updateDto);
 
       expect(result).toEqual(updatedRecipe);
 
@@ -127,18 +127,11 @@ describe('RecipesController', () => {
 
   describe('delete', () => {
     it('should delete a recipe', async () => {
-      const recipe = {
-        id: 1,
-        name: 'Pasta carbonara',
-        description: 'Pasta con huevo y queso',
-        prepTime: 25,
-      };
+      recipesServiceMock.delete.mockResolvedValue(undefined);
 
-      recipesServiceMock.delete.mockResolvedValue(recipe);
+      const result = await controller.delete(1);
 
-      const result = await controller.delete('1');
-
-      expect(result).toEqual(recipe);
+      expect(result).toBeUndefined();
 
       expect(recipesServiceMock.delete).toHaveBeenCalledWith(1);
     });
