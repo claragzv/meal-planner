@@ -5,6 +5,7 @@ import { AppService } from './app.service.js';
 import { RecipesModule } from './recipes/recipes.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { IngredientsModule } from './ingredients/ingredients.module.js';
+import { ProductsModule } from './products/products.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { IngredientsModule } from './ingredients/ingredients.module.js';
     RecipesModule,
     PrismaModule,
     IngredientsModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
