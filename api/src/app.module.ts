@@ -4,6 +4,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { RecipesModule } from './recipes/recipes.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { IngredientsModule } from './ingredients/ingredients.module.js';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     }),
     RecipesModule,
     PrismaModule,
+    IngredientsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
