@@ -57,7 +57,7 @@ describe('IngredientsController', () => {
   });
 
   describe('findOne', () => {
-    it('should return a ingredient by ID', async () => {
+    it('should return an ingredient by ID', async () => {
       const ingredient = {
         id: ingredientId,
         name: 'Pasta',
@@ -71,7 +71,7 @@ describe('IngredientsController', () => {
       expect(result).toEqual(ingredient);
 
       expect(ingredientsServiceMock.findOne).toHaveBeenCalledWith(ingredientId);
-    })
+    });
   });
 
   describe('create', () => {
