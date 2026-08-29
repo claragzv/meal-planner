@@ -98,8 +98,13 @@ export class RecipesController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid recipe id or validation error',
+    description: 'Invalid recipe id',
     type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    type: ValidationErrorResponseDto,
   })
   @ApiResponse({
     status: 404,
