@@ -1,26 +1,93 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { ProductNotFoundException } from '../common/exceptions/product-not-found.exception.js';
+import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  constructor(private readonly prisma: PrismaService) { }
+
+  async create(createProductDto: CreateProductDto) {
+    if (createProductDto.ingredientId) {
+      const ingredient = await this.prisma.ingredient.findUnique({
+        where: {
+          id: createProductDto.ingredientId,
+        },
+      });
+
+      if (!ingredient) {
+        throw new IngredientNotFoundException(
+          createProductDto.ingredientId,
+        );
+      }
+
+    }
+
+    return this.prisma.product.create({
+      data: createProductDto,
+    });
   }
+
 
   findAll() {
-    return `This action returns all products`;
+    return this.prisma.product.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new ProductNotFoundException(id);
+    }
+
+    return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new ProductNotFoundException(id);
+    }
+
+    if (updateProductDto.ingredientId) {
+      const ingredient = await this.prisma.ingredient.findUnique({
+        where: {
+          id: updateProductDto.ingredientId,
+        },
+      });
+
+      if (!ingredient) {
+        throw new IngredientNotFoundException(
+          updateProductDto.ingredientId,
+        );
+      }
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: updateProductDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+
+  async delete(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new ProductNotFoundException(id);
+    }
+
+    await this.prisma.product.delete({
+      where: { id },
+    });
   }
 }
