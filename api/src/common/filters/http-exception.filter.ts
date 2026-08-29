@@ -47,6 +47,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
     private getErrorCode(status: number): string {
         switch (status) {
             case 400:
+                /* 
+                Este es para cuando es algo inválido pero solo una cosa, 
+                no una posible lista de cosas. Para la lista se usa el ValidationErrorResponseDto, 
+                que tiene un array de mensajes.
+                ErrorResponseDto: uuid
+                ValidationErrorResponseDto: name should not be empty, name must be a string, name must be at least 3 characters long...
+                */
                 return 'VALIDATION_ERROR';
             case 401:
                 return 'UNAUTHORIZED';
