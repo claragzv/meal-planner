@@ -488,5 +488,75 @@ describe('Ingredients (e2e)', () => {
             });
         });
     });
+
+    describe('GET /ingredients/:id/products', () => {
+        it('should return products for an ingredient', async () => {
+            const ingredient = await prisma.ingredient.create({
+                data: {
+                    name: 'Leche',
+                    defaultUnit: 'l',
+                },
+            });
+
+            const product = {
+                name: 'Leche Entera',
+                brand: 'Hacendado',
+                ingredientId: ingredient.id,
+            };
+
+            const createResponse = await request(app.getHttpServer())
+                .post('/products')
+                .send(product)
+                .expect(201);
+
+            const response = await request(app.getHttpServer())
+                .get(`/ingredients/${ingredient.id}/products`)
+                .expect(200);
+
+            expect(response.body).toEqual([
+                {
+                    id: createResponse.body.id,
+                    ...product,
+                },
+            ]);
+        });
+
+        it('should return an empty array when the ingredient has no products', async () => {
+            const ingredient = await prisma.ingredient.create({
+                data: {
+                    name: 'Leche',
+                    defaultUnit: 'l',
+                },
+            });
+
+            const response = await request(app.getHttpServer())
+                .get(`/ingredients/${ingredient.id}/products`)
+                .expect(200);
+
+            expect(response.body).toEqual([]);
+        });
+
+        it('should return 400 when ingredient id is not a valid UUID', async () => {
+            await request(app.getHttpServer())
+                .get('/ingredients/not-a-uuid/products')
+                .expect(400);
+        });
+
+        it('should return 404 when ingredient does not exist', async () => {
+            const nonExistingId =
+                '550e8400-e29b-41d4-a716-446655440099';
+
+            const response = await request(app.getHttpServer())
+                .get(`/ingredients/${nonExistingId}/products`)
+                .expect(404);
+
+            expect(response.body).toEqual({
+                statusCode: 404,
+                code: 'INGREDIENT_NOT_FOUND',
+                message: expect.any(String),
+            });
+        });
+    });
+
 });
 

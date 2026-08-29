@@ -10,21 +10,24 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IngredientsService } from './ingredients.service.js';
 import { CreateIngredientDto } from './dto/create-ingredient.dto.js';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto.js';
 import { IngredientResponseDto } from './dto/ingredient-response.dto.js';
 
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { ValidationErrorResponseDto } from '../common/dto/validation-error-response.dto.js';
 import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
+
+import { ProductsService } from '../products/products.service.js';
 
 @ApiTags('ingredients')
 @Controller('ingredients')
 export class IngredientsController {
   constructor(
     private readonly ingredientsService: IngredientsService,
+    private readonly productsService: ProductsService,
   ) { }
 
   @Post()
@@ -145,4 +148,12 @@ export class IngredientsController {
   delete(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.ingredientsService.delete(id);
   }
+
+  @Get(':id/products')
+  findProducts(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.productsService.findByIngredient(id);
+  }
+
 }

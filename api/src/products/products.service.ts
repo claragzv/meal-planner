@@ -90,4 +90,18 @@ export class ProductsService {
       where: { id },
     });
   }
+
+  async findByIngredient(ingredientId: string) {
+    const ingredient = await this.prisma.ingredient.findUnique({
+      where: { id: ingredientId },
+    });
+
+    if (!ingredient) {
+      throw new IngredientNotFoundException(ingredientId);
+    }
+
+    return this.prisma.product.findMany({
+      where: { ingredientId },
+    });
+  }
 }

@@ -266,4 +266,70 @@ describe('ProductsService', () => {
       expect(prismaMock.product.delete).not.toHaveBeenCalled();
     });
   });
+
+  describe('findByIngredient', () => {
+    it('should return products for an existing ingredient', async () => {
+      const products = [
+        {
+          id: productId,
+          name: 'Leche Entera',
+          brand: 'Hacendado',
+          ingredientId: productId2,
+        },
+      ];
+
+      prismaMock.ingredient.findUnique.mockResolvedValue({
+        id: productId2,
+        name: 'Leche',
+        defaultUnit: 'l',
+      });
+
+      prismaMock.product.findMany.mockResolvedValue(products);
+
+      const result = await service.findByIngredient(productId2);
+
+      expect(result).toEqual(products);
+
+      expect(prismaMock.ingredient.findUnique).toHaveBeenCalledWith({
+        where: { id: productId2 },
+      });
+
+      expect(prismaMock.product.findMany).toHaveBeenCalledWith({
+        where: { ingredientId: productId2 },
+      });
+    });
+
+    it('should return an empty array when the ingredient has no products', async () => {
+      prismaMock.ingredient.findUnique.mockResolvedValue({
+        id: productId2,
+        name: 'Leche',
+        defaultUnit: 'l',
+      });
+
+      prismaMock.product.findMany.mockResolvedValue([]);
+
+      const result = await service.findByIngredient(productId2);
+
+      expect(result).toEqual([]);
+
+      expect(prismaMock.product.findMany).toHaveBeenCalledWith({
+        where: { ingredientId: productId2 },
+      });
+    });
+
+    it('should throw IngredientNotFoundException when ingredient does not exist', async () => {
+      prismaMock.ingredient.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.findByIngredient(nonExistingId),
+      ).rejects.toThrow(IngredientNotFoundException);
+
+      expect(prismaMock.ingredient.findUnique).toHaveBeenCalledWith({
+        where: { id: nonExistingId },
+      });
+
+      expect(prismaMock.product.findMany).not.toHaveBeenCalled();
+    });
+  });
+
 });
