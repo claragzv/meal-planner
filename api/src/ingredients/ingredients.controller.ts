@@ -18,6 +18,7 @@ import { IngredientResponseDto } from './dto/ingredient-response.dto.js';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { ValidationErrorResponseDto } from '../common/dto/validation-error-response.dto.js';
+import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
 
 @ApiTags('ingredients')
 @Controller('ingredients')
@@ -74,7 +75,7 @@ export class IngredientsController {
   @ApiResponse({
     status: 404,
     description: 'Ingredient not found',
-    type: ErrorResponseDto,
+    type: IngredientNotFoundException,
   })
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.ingredientsService.findOne(id);
@@ -106,7 +107,7 @@ export class IngredientsController {
   @ApiResponse({
     status: 404,
     description: 'Ingredient not found',
-    type: ErrorResponseDto,
+    type: IngredientNotFoundException,
   })
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -139,7 +140,7 @@ export class IngredientsController {
   @ApiResponse({
     status: 404,
     description: 'Ingredient not found',
-    type: ErrorResponseDto,
+    type: IngredientNotFoundException,
   })
   delete(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.ingredientsService.delete(id);

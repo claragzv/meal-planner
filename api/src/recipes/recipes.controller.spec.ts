@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RecipesController } from './recipes.controller.js';
 import { RecipesService } from './recipes.service.js';
 import { jest } from '@jest/globals';
-import { Recipe } from './entities/recipe.entity.js';
+import { Recipe } from 'generated/prisma/client.js';
 
 describe('RecipesController', () => {
   let controller: RecipesController;
