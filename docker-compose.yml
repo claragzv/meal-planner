@@ -20,3 +20,7 @@ services:
 
 volumes:
     meal_planner_data:
+
+        # Para entrar a las BBDD
+        # docker exec -it meal-planner-postgres-1 psql -U meal_planner_user -d meal_planner
+        # docker exec -it meal-planner-postgres-1 psql -U meal_planner_user -d meal_planner_test
