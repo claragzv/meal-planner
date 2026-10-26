@@ -23,6 +23,7 @@ model Ingredient {
   products          Product[]
   recipeIngredients RecipeIngredient[]
   mealItems         MealItem[]
+  inventoryItems    InventoryItem[]
 }
 
 model RecipeIngredient {
@@ -40,12 +41,13 @@ model RecipeIngredient {
 }
 
 model Product {
-  id           String      @id @default(uuid())
-  name         String
-  brand        String?
-  ingredientId String?
-  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id])
-  mealItems    MealItem[]
+  id             String          @id @default(uuid())
+  name           String
+  brand          String?
+  ingredientId   String?
+  ingredient     Ingredient?     @relation(fields: [ingredientId], references: [id])
+  mealItems      MealItem[]
+  inventoryItems InventoryItem[]
 }
 
 enum MealItemType {
@@ -117,4 +119,20 @@ model MealPlanItem {
   @@index([mealPlanId])
   @@index([mealId])
   @@index([date])
+}
+
+model InventoryItem {
+  id           String   @id @default(uuid())
+  ingredientId String?
+  productId    String?
+  quantity     Float
+  unit         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  product    Product?    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([ingredientId])
+  @@index([productId])
 }
