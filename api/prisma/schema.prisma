@@ -55,11 +55,12 @@ enum MealItemType {
 }
 
 model Meal {
-  id        String     @id @default(uuid())
+  id        String         @id @default(uuid())
   name      String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
   items     MealItem[]
+  planItems MealPlanItem[]
 }
 
 model MealItem {
@@ -84,4 +85,36 @@ model MealItem {
   @@index([recipeId])
   @@index([ingredientId])
   @@index([productId])
+}
+
+enum MealMoment {
+  breakfast
+  lunch
+  dinner
+  snack
+}
+
+model MealPlan {
+  id        String         @id @default(uuid())
+  name      String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  items     MealPlanItem[]
+}
+
+model MealPlanItem {
+  id         String     @id @default(uuid())
+  mealPlanId String
+  mealId     String
+  date       DateTime   @db.Date
+  moment     MealMoment
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  meal     Meal     @relation(fields: [mealId], references: [id], onDelete: Restrict)
+
+  @@index([mealPlanId])
+  @@index([mealId])
+  @@index([date])
 }
