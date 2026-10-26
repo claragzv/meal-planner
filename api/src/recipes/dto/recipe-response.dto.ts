@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { RecipeIngredientResponseDto } from './recipe-ingredient-response.dto.js';
 
 export class RecipeResponseDto {
     @ApiProperty({
@@ -23,4 +24,7 @@ export class RecipeResponseDto {
         minimum: 1,
     })
     prepTime: number;
+
+    @ApiProperty({ type: [RecipeIngredientResponseDto] })
+    recipeIngredients: RecipeIngredientResponseDto[];
 }

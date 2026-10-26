@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RecipeNotFoundException } from '../common/exceptions/recipe-not-found.exception.js';
 import { CreateRecipeDto } from './dto/create-recipe.dto.js';
 import { UpdateRecipeDto } from './dto/update-recipe.dto.js';
@@ -10,18 +10,46 @@ export class RecipesService {
   constructor(private readonly prisma: PrismaService) { }
 
   create(createRecipeDto: CreateRecipeDto) {
+    const { ingredients, ...recipeData } = createRecipeDto;
+
     return this.prisma.recipe.create({
-      data: createRecipeDto,
+      data: {
+        ...recipeData,
+        ...(ingredients && {
+          recipeIngredients: {
+            create: ingredients.map(({ ingredientId, ...ingredientData }) => ({
+              ...ingredientData,
+              ingredient: { connect: { id: ingredientId } },
+            })),
+          },
+        }),
+      },
+      include: {
+        recipeIngredients: {
+          include: { ingredient: true },
+        },
+      },
     });
   }
 
   findAll() {
-    return this.prisma.recipe.findMany();
+    return this.prisma.recipe.findMany({
+      include: {
+        recipeIngredients: {
+          include: { ingredient: true },
+        },
+      },
+    });
   }
 
   async findOne(id: string) {
     const recipe = await this.prisma.recipe.findUnique({
       where: { id },
+      include: {
+        recipeIngredients: {
+          include: { ingredient: true },
+        },
+      },
     });
 
     if (!recipe) {
@@ -42,11 +70,29 @@ export class RecipesService {
       throw new RecipeNotFoundException(id);
     }
 
+    const { ingredients, ...recipeData } = updateRecipeDto;
+
     return this.prisma.recipe.update({
       where: {
         id,
       },
-      data: updateRecipeDto,
+      data: {
+        ...recipeData,
+        ...(ingredients && {
+          recipeIngredients: {
+            deleteMany: {},
+            create: ingredients.map(({ ingredientId, ...ingredientData }) => ({
+              ...ingredientData,
+              ingredient: { connect: { id: ingredientId } },
+            })),
+          },
+        }),
+      },
+      include: {
+        recipeIngredients: {
+          include: { ingredient: true },
+        },
+      },
     });
   }
 

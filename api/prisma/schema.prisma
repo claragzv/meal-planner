@@ -8,17 +8,35 @@ datasource db {
 }
 
 model Recipe {
-  id          String   @id @default(uuid())
-  name        String
-  description String
-  prepTime    Int
+  id                String             @id @default(uuid())
+  name              String
+  description       String
+  prepTime          Int
+  recipeIngredients RecipeIngredient[]
+  mealItems         MealItem[]
 }
 
 model Ingredient {
-  id          String    @id @default(uuid())
-  name        String
-  defaultUnit String
-  products    Product[]
+  id                String             @id @default(uuid())
+  name              String
+  defaultUnit       String
+  products          Product[]
+  recipeIngredients RecipeIngredient[]
+  mealItems         MealItem[]
+}
+
+model RecipeIngredient {
+  id           String @id @default(uuid())
+  recipeId     String
+  ingredientId String
+  quantity     Float
+  unit         String
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([recipeId])
+  @@index([ingredientId])
 }
 
 model Product {
@@ -27,4 +45,43 @@ model Product {
   brand        String?
   ingredientId String?
   ingredient   Ingredient? @relation(fields: [ingredientId], references: [id])
+  mealItems    MealItem[]
+}
+
+enum MealItemType {
+  recipe
+  ingredient
+  product
+}
+
+model Meal {
+  id        String     @id @default(uuid())
+  name      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     MealItem[]
+}
+
+model MealItem {
+  id           String       @id @default(uuid())
+  mealId       String
+  type         MealItemType
+  recipeId     String?
+  ingredientId String?
+  productId    String?
+  quantity     Float?
+  unit         String?
+  servings     Float?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  meal       Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  recipe     Recipe?     @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  product    Product?    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([mealId])
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@index([productId])
 }
