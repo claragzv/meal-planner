@@ -5,6 +5,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateMealPlanDto } from './dto/create-meal-plan.dto.js';
 import { CreateMealPlanItemDto } from './dto/create-meal-plan-item.dto.js';
 import { UpdateMealPlanDto } from './dto/update-meal-plan.dto.js';
+import { DependencyReference, EntityInUseException } from '../common/exceptions/entity-in-use.exception.js';
+import { MealNotFoundException } from '../common/exceptions/meal-not-found.exception.js';
 
 const itemInclude = { meal: { include: { items: true } } } satisfies Prisma.MealPlanItemInclude;
 
@@ -20,8 +22,9 @@ function toMealPlanItemCreateData(item: CreateMealPlanItemDto): Prisma.MealPlanI
 export class MealPlansService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateMealPlanDto) {
+  async create(dto: CreateMealPlanDto) {
     const { items, ...planData } = dto;
+    await this.ensureMealsExist(items);
     return this.prisma.mealPlan.create({
       data: {
         ...planData,
@@ -51,6 +54,7 @@ export class MealPlansService {
     if (!existing) throw new MealPlanNotFoundException(id);
 
     const { items, ...planData } = dto;
+    await this.ensureMealsExist(items);
     return this.prisma.mealPlan.update({
       where: { id },
       data: {
@@ -69,6 +73,27 @@ export class MealPlansService {
   async delete(id: string) {
     const existing = await this.prisma.mealPlan.findUnique({ where: { id } });
     if (!existing) throw new MealPlanNotFoundException(id);
+
+    const shoppingItems = await this.prisma.shoppingItem.findMany({
+      where: { mealPlanId: id },
+      select: { id: true, name: true },
+    });
+    if (shoppingItems.length) {
+      const dependencies: DependencyReference[] = shoppingItems.map((item) => ({
+        type: 'ShoppingItem',
+        id: item.id,
+        name: item.name,
+      }));
+      throw new EntityInUseException('meal plan', id, existing.name ?? id, dependencies);
+    }
     await this.prisma.mealPlan.delete({ where: { id } });
+  }
+
+  private async ensureMealsExist(items?: CreateMealPlanItemDto[]) {
+    if (!items?.length) return;
+    await Promise.all(items.map(async (item) => {
+      const meal = await this.prisma.meal.findUnique({ where: { id: item.mealId } });
+      if (!meal) throw new MealNotFoundException(item.mealId);
+    }));
   }
 }

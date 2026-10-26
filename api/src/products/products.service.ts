@@ -4,6 +4,7 @@ import { UpdateProductDto } from './dto/update-product.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ProductNotFoundException } from '../common/exceptions/product-not-found.exception.js';
 import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
+import { DependencyReference, EntityInUseException } from '../common/exceptions/entity-in-use.exception.js';
 
 @Injectable()
 export class ProductsService {
@@ -27,17 +28,19 @@ export class ProductsService {
 
     return this.prisma.product.create({
       data: createProductDto,
+      include: { nutrition: true },
     });
   }
 
 
   findAll() {
-    return this.prisma.product.findMany();
+    return this.prisma.product.findMany({ include: { nutrition: true } });
   }
 
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
+      include: { nutrition: true },
     });
 
     if (!product) {
@@ -73,6 +76,7 @@ export class ProductsService {
     return this.prisma.product.update({
       where: { id },
       data: updateProductDto,
+      include: { nutrition: true },
     });
   }
 
@@ -84,6 +88,23 @@ export class ProductsService {
 
     if (!product) {
       throw new ProductNotFoundException(id);
+    }
+
+    const [mealItems, inventoryItems, shoppingItems] = await Promise.all([
+      this.prisma.mealItem.findMany({
+        where: { productId: id },
+        include: { meal: { select: { id: true, name: true } } },
+      }),
+      this.prisma.inventoryItem.findMany({ where: { productId: id }, select: { id: true } }),
+      this.prisma.shoppingItem.findMany({ where: { productId: id }, select: { id: true, name: true } }),
+    ]);
+    const dependencies: DependencyReference[] = [
+      ...mealItems.map((item) => ({ type: 'Meal', id: item.meal.id, name: item.meal.name ?? item.meal.id })),
+      ...inventoryItems.map((item) => ({ type: 'InventoryItem', id: item.id, name: product.name })),
+      ...shoppingItems.map((item) => ({ type: 'ShoppingItem', id: item.id, name: item.name })),
+    ];
+    if (dependencies.length) {
+      throw new EntityInUseException('product', id, product.name, dependencies);
     }
 
     await this.prisma.product.delete({
@@ -102,6 +123,7 @@ export class ProductsService {
 
     return this.prisma.product.findMany({
       where: { ingredientId },
+      include: { nutrition: true },
     });
   }
 }

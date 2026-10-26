@@ -3,14 +3,17 @@ import { RecipeNotFoundException } from '../common/exceptions/recipe-not-found.e
 import { CreateRecipeDto } from './dto/create-recipe.dto.js';
 import { UpdateRecipeDto } from './dto/update-recipe.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { DependencyReference, EntityInUseException } from '../common/exceptions/entity-in-use.exception.js';
+import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
 
 @Injectable()
 export class RecipesService {
   // eso es para que cuando nest cree un recipe service, haga una instancia de prisma service y la inyecte en el constructor
   constructor(private readonly prisma: PrismaService) { }
 
-  create(createRecipeDto: CreateRecipeDto) {
+  async create(createRecipeDto: CreateRecipeDto) {
     const { ingredients, ...recipeData } = createRecipeDto;
+    await this.ensureIngredientsExist(ingredients);
 
     return this.prisma.recipe.create({
       data: {
@@ -71,6 +74,7 @@ export class RecipesService {
     }
 
     const { ingredients, ...recipeData } = updateRecipeDto;
+    await this.ensureIngredientsExist(ingredients);
 
     return this.prisma.recipe.update({
       where: {
@@ -96,6 +100,18 @@ export class RecipesService {
     });
   }
 
+  private async ensureIngredientsExist(ingredients?: CreateRecipeDto['ingredients']) {
+    if (!ingredients?.length) return;
+    const ids = [...new Set(ingredients.map((item) => item.ingredientId))];
+    const found = await this.prisma.ingredient.findMany({
+      where: { id: { in: ids } },
+      select: { id: true },
+    });
+    const foundIds = new Set(found.map((ingredient) => ingredient.id));
+    const missingId = ids.find((ingredientId) => !foundIds.has(ingredientId));
+    if (missingId) throw new IngredientNotFoundException(missingId);
+  }
+
   async delete(id: string) {
     const recipe = await this.prisma.recipe.findUnique({
       where: { id },
@@ -103,6 +119,19 @@ export class RecipesService {
 
     if (!recipe) {
       throw new RecipeNotFoundException(id);
+    }
+
+    const mealItems = await this.prisma.mealItem.findMany({
+      where: { recipeId: id },
+      include: { meal: { select: { id: true, name: true } } },
+    });
+    if (mealItems.length) {
+      const dependencies: DependencyReference[] = mealItems.map((item) => ({
+        type: 'Meal',
+        id: item.meal.id,
+        name: item.meal.name ?? item.meal.id,
+      }));
+      throw new EntityInUseException('recipe', id, recipe.name, dependencies);
     }
 
     await this.prisma.recipe.delete({

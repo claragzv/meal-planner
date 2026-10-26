@@ -4,6 +4,8 @@ import { InventoryItemNotFoundException } from '../common/exceptions/inventory-i
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateInventoryItemDto, InventoryItemKind } from './dto/create-inventory-item.dto.js';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto.js';
+import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
+import { ProductNotFoundException } from '../common/exceptions/product-not-found.exception.js';
 
 const inventoryItemInclude = {
   ingredient: true,
@@ -15,6 +17,18 @@ export class InventoryService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateInventoryItemDto) {
+    return this.createWithReferenceValidation(dto);
+  }
+
+  private async createWithReferenceValidation(dto: CreateInventoryItemDto) {
+    if (dto.type === InventoryItemKind.Ingredient) {
+      const ingredient = await this.prisma.ingredient.findUnique({ where: { id: dto.ingredientId } });
+      if (!ingredient) throw new IngredientNotFoundException(dto.ingredientId!);
+    } else {
+      const product = await this.prisma.product.findUnique({ where: { id: dto.productId } });
+      if (!product) throw new ProductNotFoundException(dto.productId!);
+    }
+
     const { type, ingredientId, productId, ...quantityData } = dto;
     const data: Prisma.InventoryItemCreateInput = {
       ...quantityData,
