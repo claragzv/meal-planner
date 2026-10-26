@@ -6,6 +6,7 @@ import { RecipesModule } from './recipes/recipes.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { IngredientsModule } from './ingredients/ingredients.module.js';
 import { ProductsModule } from './products/products.module.js';
+import { MealsModule } from './meals/meals.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ProductsModule } from './products/products.module.js';
     PrismaModule,
     IngredientsModule,
     ProductsModule,
+    MealsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
