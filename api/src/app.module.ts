@@ -10,6 +10,8 @@ import { MealsModule } from './meals/meals.module.js';
 import { MealPlansModule } from './meal-plans/meal-plans.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { ShoppingModule } from './shopping/shopping.module.js';
+import { ConsumptionModule } from './consumption/consumption.module.js';
+import { NutritionModule } from './nutrition/nutrition.module.js';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { ShoppingModule } from './shopping/shopping.module.js';
     MealPlansModule,
     InventoryModule,
     ShoppingModule,
+    ConsumptionModule,
+    NutritionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

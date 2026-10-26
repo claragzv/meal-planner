@@ -26,6 +26,7 @@ model Ingredient {
   mealItems         MealItem[]
   inventoryItems    InventoryItem[]
   shoppingItems     ShoppingItem[]
+  nutrition         Nutrition?
 }
 
 model RecipeIngredient {
@@ -51,6 +52,7 @@ model Product {
   mealItems      MealItem[]
   inventoryItems InventoryItem[]
   shoppingItems  ShoppingItem[]
+  nutrition      Nutrition?
 }
 
 enum MealItemType {
@@ -184,4 +186,28 @@ model ShoppingItemSource {
 
   @@index([shoppingItemId])
   @@index([mealItemId])
+}
+
+enum NutritionBasisUnit {
+  g
+  ml
+}
+
+model Nutrition {
+  id            String             @id @default(uuid())
+  basisQuantity Float
+  basisUnit     NutritionBasisUnit
+  calories      Float?
+  protein       Float?
+  carbohydrates Float?
+  fat           Float?
+  fiber         Float?
+  sugar         Float?
+  saturatedFat  Float?
+  salt          Float?
+  ingredientId  String?            @unique
+  productId     String?            @unique
+
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  product    Product?    @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

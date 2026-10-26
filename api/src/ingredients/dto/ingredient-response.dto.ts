@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { NutritionResponseDto } from '../../nutrition/dto/nutrition-response.dto.js';
 
 export class IngredientResponseDto {
     @ApiProperty({
@@ -18,4 +20,7 @@ export class IngredientResponseDto {
         description: 'Default unit used for the ingredient',
     })
     defaultUnit: string;
+
+    @ApiPropertyOptional({ type: NutritionResponseDto, nullable: true })
+    nutrition: NutritionResponseDto | null;
 }
