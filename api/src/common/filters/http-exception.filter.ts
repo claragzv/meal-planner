@@ -11,6 +11,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse();
 
+        if (this.isPrismaError(exception, 'P2003') || this.isPrismaError(exception, 'P2014')) {
+            const meta = this.getPrismaMeta(exception);
+            const field = typeof meta?.field_name === 'string' ? meta.field_name : undefined;
+            return response.status(409).json({
+                statusCode: 409,
+                code: 'DEPENDENCY_CONFLICT',
+                message: field
+                    ? `The operation conflicts with a related record through ${field}.`
+                    : 'The operation conflicts with a related record.',
+                ...(field && { details: { field } }),
+            });
+        }
+
+        if (this.isPrismaError(exception, 'P2025')) {
+            const meta = this.getPrismaMeta(exception);
+            return response.status(404).json({
+                statusCode: 404,
+                code: 'RELATED_RECORD_NOT_FOUND',
+                message: 'A record required by this operation was not found.',
+                ...(typeof meta?.cause === 'string' && { details: { cause: meta.cause } }),
+            });
+        }
+
         if (exception instanceof HttpException) {
             const status = exception.getStatus();
             const exceptionResponse = exception.getResponse();
@@ -42,6 +65,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Internal server error',
         });
+    }
+
+    private isPrismaError(exception: unknown, code: string): boolean {
+        return typeof exception === 'object' && exception !== null && 'code' in exception && exception.code === code;
+    }
+
+    private getPrismaMeta(exception: unknown): Record<string, unknown> | undefined {
+        if (typeof exception !== 'object' || exception === null || !('meta' in exception)) return undefined;
+        const meta = exception.meta;
+        return typeof meta === 'object' && meta !== null ? meta as Record<string, unknown> : undefined;
     }
 
     private getErrorCode(status: number): string {
