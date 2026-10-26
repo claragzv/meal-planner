@@ -25,6 +25,9 @@ export class RecipeResponseDto {
     })
     prepTime: number;
 
+    @ApiProperty({ example: 4, minimum: 1 })
+    servings: number;
+
     @ApiProperty({ type: [RecipeIngredientResponseDto] })
     recipeIngredients: RecipeIngredientResponseDto[];
 }

@@ -12,6 +12,7 @@ model Recipe {
   name              String
   description       String
   prepTime          Int
+  servings          Int                @default(1)
   recipeIngredients RecipeIngredient[]
   mealItems         MealItem[]
 }
@@ -24,6 +25,7 @@ model Ingredient {
   recipeIngredients RecipeIngredient[]
   mealItems         MealItem[]
   inventoryItems    InventoryItem[]
+  shoppingItems     ShoppingItem[]
 }
 
 model RecipeIngredient {
@@ -48,6 +50,7 @@ model Product {
   ingredient     Ingredient?     @relation(fields: [ingredientId], references: [id])
   mealItems      MealItem[]
   inventoryItems InventoryItem[]
+  shoppingItems  ShoppingItem[]
 }
 
 enum MealItemType {
@@ -66,17 +69,18 @@ model Meal {
 }
 
 model MealItem {
-  id           String       @id @default(uuid())
-  mealId       String
-  type         MealItemType
-  recipeId     String?
-  ingredientId String?
-  productId    String?
-  quantity     Float?
-  unit         String?
-  servings     Float?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id              String               @id @default(uuid())
+  mealId          String
+  type            MealItemType
+  recipeId        String?
+  ingredientId    String?
+  productId       String?
+  quantity        Float?
+  unit            String?
+  servings        Float?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  shoppingSources ShoppingItemSource[]
 
   meal       Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
   recipe     Recipe?     @relation(fields: [recipeId], references: [id], onDelete: Restrict)
@@ -97,11 +101,12 @@ enum MealMoment {
 }
 
 model MealPlan {
-  id        String         @id @default(uuid())
-  name      String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  items     MealPlanItem[]
+  id            String         @id @default(uuid())
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  items         MealPlanItem[]
+  shoppingItems ShoppingItem[]
 }
 
 model MealPlanItem {
@@ -135,4 +140,48 @@ model InventoryItem {
 
   @@index([ingredientId])
   @@index([productId])
+}
+
+enum ShoppingItemSourceType {
+  meal_plan
+  manual
+}
+
+model ShoppingItem {
+  id           String   @id @default(uuid())
+  mealPlanId   String?
+  name         String
+  ingredientId String?
+  productId    String?
+  quantity     Float
+  unit         String
+  checked      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ingredient Ingredient?          @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  product    Product?             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  mealPlan   MealPlan?            @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  sources    ShoppingItemSource[]
+
+  @@index([ingredientId])
+  @@index([productId])
+  @@index([mealPlanId])
+}
+
+model ShoppingItemSource {
+  id             String                 @id @default(uuid())
+  shoppingItemId String
+  type           ShoppingItemSourceType
+  mealItemId     String?
+  quantity       Float
+  unit           String
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  shoppingItem ShoppingItem @relation(fields: [shoppingItemId], references: [id], onDelete: Cascade)
+  mealItem     MealItem?    @relation(fields: [mealItemId], references: [id], onDelete: SetNull)
+
+  @@index([shoppingItemId])
+  @@index([mealItemId])
 }

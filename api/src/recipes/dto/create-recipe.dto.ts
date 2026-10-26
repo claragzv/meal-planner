@@ -32,6 +32,12 @@ export class CreateRecipeDto {
     @Min(1)
     prepTime: number;
 
+    @ApiPropertyOptional({ example: 4, minimum: 1, description: 'Base number of servings for this recipe' })
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    servings?: number;
+
     @ApiPropertyOptional({ type: [CreateRecipeIngredientDto] })
     @IsOptional()
     @IsArray()
