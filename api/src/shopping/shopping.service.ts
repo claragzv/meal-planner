@@ -6,6 +6,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateManualShoppingItemDto } from './dto/create-manual-shopping-item.dto.js';
 import { UpdateShoppingItemDto } from './dto/update-shopping-item.dto.js';
 import { AddShoppingItemToInventoryDto } from './dto/add-shopping-item-to-inventory.dto.js';
+import { convertQuantity as convert, roundQuantity, tryConvertQuantity } from '../common/units.js';
+import { IngredientNotFoundException } from '../common/exceptions/ingredient-not-found.exception.js';
+import { ProductNotFoundException } from '../common/exceptions/product-not-found.exception.js';
 
 const planInclude = {
   items: {
@@ -25,36 +28,11 @@ const planInclude = {
   },
 } satisfies Prisma.MealPlanInclude;
 
-const massFactors: Record<string, number> = { g: 1, kg: 1000 };
-const volumeFactors: Record<string, number> = { ml: 1, l: 1000 };
 const shoppingItemInclude = {
   ingredient: true,
   product: true,
   sources: { include: { mealItem: true } },
 } satisfies Prisma.ShoppingItemInclude;
-
-function convert(quantity: number, from: string, to: string): number {
-  if (from === to) return roundQuantity(quantity);
-  if (massFactors[from] !== undefined && massFactors[to] !== undefined) {
-    return roundQuantity((quantity * massFactors[from]) / massFactors[to]);
-  }
-  if (volumeFactors[from] !== undefined && volumeFactors[to] !== undefined) {
-    return roundQuantity((quantity * volumeFactors[from]) / volumeFactors[to]);
-  }
-  throw new BadRequestException(`Cannot convert ${from} to ${to}; configure compatible units first.`);
-}
-
-function tryConvert(quantity: number, from: string, to: string): number | undefined {
-  try {
-    return convert(quantity, from, to);
-  } catch {
-    return undefined;
-  }
-}
-
-function roundQuantity(quantity: number): number {
-  return Number(quantity.toFixed(6));
-}
 
 type NeedSource = { mealItemId: string; quantity: number; unit: string; mealName: string | null };
 type NeedGroup = {
@@ -78,9 +56,18 @@ export class ShoppingService {
     });
   }
 
-  createManualItem(dto: CreateManualShoppingItemDto) {
+  async createManualItem(dto: CreateManualShoppingItemDto) {
     if (dto.ingredientId && dto.productId) {
       throw new BadRequestException('A shopping item can reference an ingredient or a product, not both.');
+    }
+    if (dto.ingredientId && !(await this.prisma.ingredient.findUnique({ where: { id: dto.ingredientId } }))) {
+      throw new IngredientNotFoundException(dto.ingredientId);
+    }
+    if (dto.productId && !(await this.prisma.product.findUnique({ where: { id: dto.productId } }))) {
+      throw new ProductNotFoundException(dto.productId);
+    }
+    if (dto.mealPlanId && !(await this.prisma.mealPlan.findUnique({ where: { id: dto.mealPlanId } }))) {
+      throw new MealPlanNotFoundException(dto.mealPlanId);
     }
     const { ingredientId, productId, mealPlanId, ...itemData } = dto;
     return this.prisma.shoppingItem.create({
@@ -140,7 +127,7 @@ export class ShoppingService {
         updatedAt: Date;
       } | null = null;
       for (const existing of inventoryItems) {
-        const converted = tryConvert(purchasedQuantity, purchasedUnit, existing.unit);
+        const converted = tryConvertQuantity(purchasedQuantity, purchasedUnit, existing.unit);
         if (converted === undefined) continue;
         inventoryItem = await tx.inventoryItem.update({
           where: { id: existing.id },
